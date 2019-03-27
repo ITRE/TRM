@@ -2,6 +2,16 @@ version: '3'
 
 services:
 
+
+##############################
+#       Set Up MongoDB       #
+##############################
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+
 ##############################
 #    Set Up Node Container   #
 ##############################
@@ -17,7 +27,9 @@ services:
       - ${APP_SERVER_PORT}:${APP_SERVER_PORT}
     volumes:
       - ./server/src:/src
-    command: npm run dev
+    links:
+      - mongo
+    command: npm run start
 
 ###############################
 #   Set Up Client Container   #

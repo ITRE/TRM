@@ -8,13 +8,14 @@ const cors = require('cors')
 const passport = require('passport')
 
 const User = require('./models/user')
+const Admin = require('./models/admin')
+const Ticket = require('./models/ticket')
 
 const routes = require('./routes')
 const config = require('./config/database')
-const cookieParser = require('cookie-parser')
 
 mongoose.Promise = global.Promise;
-mongoose.connect(config.database);
+mongoose.connect(config.database, { useNewUrlParser: true }).then(console.log, console.error);
 
 var corsOptions = {
   origin: ['http://localhost:3000', 'http://localhost:3001'],
@@ -26,7 +27,6 @@ var corsOptions = {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cookieParser())
 app.use(cors(corsOptions));
 app.use(passport.initialize());
 app.use(morgan('dev'))

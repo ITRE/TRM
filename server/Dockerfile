@@ -1,13 +1,13 @@
 FROM node:8.7.0-alpine
 
-RUN mkdir -p /server/src
-WORKDIR /server/src
+RUN mkdir -p /server
+WORKDIR /server
 
-COPY package.json /server/src
-COPY yarn.lock /server/src
+COPY package.json /server
+COPY yarn.lock /server
 
 RUN npm install
 
 COPY ./src /server/src
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]

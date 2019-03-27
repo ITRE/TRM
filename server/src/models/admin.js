@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const Schema = mongoose.Schema
 
-const UserSchema = new Schema({
+const AdminSchema = new Schema({
   username: {
     type: String,
     unique: true,
@@ -14,18 +14,11 @@ const UserSchema = new Schema({
   },
   resetPasswordToken: String,
   resetPasswordExpires: Date,
-  role: {
-    type: String,
-    default: 'Staff'
-  },
-  email: String,
-  phone: String,
   first: String,
   last: String
-},
+})
 
-
-UserSchema.pre('save', function(next)  {
+AdminSchema.pre('save', function(next)  {
   let user = this
   bcrypt.genSalt(10, function(err, salt) {
     if (err) {
@@ -62,16 +55,16 @@ const hashPassword = function(next) {
   }
 }
 
-UserSchema.pre("update", hashPassword)
-UserSchema.pre("findOneAndUpdate", hashPassword)
+AdminSchema.pre("update", hashPassword)
+AdminSchema.pre("findOneAndUpdate", hashPassword)
 
-UserSchema.methods.comparePassword = function (passw, cb) {
+AdminSchema.methods.comparePassword = function (passw, cb) {
     bcrypt.compare(passw, this.password, function (err, isMatch) {
         if (err) { return cb(err) }
         cb(null, isMatch)
     })
 }
 
-UserSchema.index({ username: 1 }, { unique: true })
+AdminSchema.index({ username: 1 }, { unique: true })
 
-module.exports = mongoose.model('User', UserSchema)
+module.exports = mongoose.model('Admin', AdminSchema)

@@ -5,37 +5,34 @@ module.exports = function(app) {
   const passport = require('passport')
   const cors = require('cors')
 
+  const users = require('./controllers/user')
+
   app.route('/')
 		.get(function(req, res) {
     	return res.status(200).send({status: "running"})
     })
 
+  app.route('/users')
+    .post(users.create_user)
+  //  .get(users.list_users)
 
 /* Error Handler */
   app.use(function (err, req, res, next) {
     console.log(err)
 
     switch (err.name) {
-      case 'MongoError':
-        if (err.code === 11000) {
-          return res.status(409).send({
-            success: false,
-            error: err,
-            msg: 'This ID is already in use. Please confirm that the item you are adding does not already exist, or choose a different ID.'
-          })
-        } else {
-          return res.status(500).send({
-            success: false,
-            error: err,
-            msg: "MongoDB encountered an error. " + err
-          })
-        }
-        break;
       case 'UpdateError':
         return res.status(409).send({
           success: false,
           error: err,
           msg: "An error occurred while attempting to update this resource. Please check than all fields have been filled and that the ObjectID is correct."
+        })
+        break;
+      case 'EmailError':
+        return res.status(409).send({
+          success: false,
+          error: err,
+          msg: "The email provided for this user was not valid. Please check your spelling and try again."
         })
         break;
       case 'ResetNotValid':
@@ -59,13 +56,6 @@ module.exports = function(app) {
           msg: "This ID does not match any registered. Please double check the Json Web Token payload."
         })
         break;
-      case 'NoUser':
-        return res.status(404).send({
-          success: false,
-          error: err,
-          msg: "This username does not match any registered user. Please double check your input."
-        })
-        break;
       case 'WrongPass':
         return res.status(403).send({
           success: false,
@@ -85,13 +75,6 @@ module.exports = function(app) {
           success: false,
           error: err,
           msg: "There was an error hashing the provided password."
-        })
-        break;
-      case 'CastError':
-        return res.status(406).send({
-          success: false,
-          error: err,
-          msg: "This ID does not match any registered user. Please double check the Json Web Token payload."
         })
         break;
       case 'Missing':
