@@ -26,7 +26,7 @@ services:
     ports:
       - ${APP_SERVER_PORT}:${APP_SERVER_PORT}
     volumes:
-      - ./server/src:/src
+      - ./server/src:/server/src
     links:
       - mongo
     command: npm run start

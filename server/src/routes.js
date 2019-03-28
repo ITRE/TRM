@@ -1,11 +1,12 @@
 module.exports = function(app) {
   const mongoose = require('mongoose')
-  const User = mongoose.model('User')
   const jwt = require('jsonwebtoken')
   const passport = require('passport')
   const cors = require('cors')
 
   const users = require('./controllers/user')
+	const tickets = require('./controllers/tickets')
+	const admin = require('./controllers/admin')
 
   app.route('/')
 		.get(function(req, res) {
@@ -14,7 +15,22 @@ module.exports = function(app) {
 
   app.route('/users')
     .post(users.create_user)
-  //  .get(users.list_users)
+    .get(users.list_users)
+
+  app.route('/users/:id')
+    .get(users.view_user)
+    .put(users.update_user)
+    .delete(users.delete_user)
+
+  app.route('/tickets')
+    .post(tickets.new_request)
+//    .get(tickets.list_users)
+
+  app.route('/admin')
+    .post(admin.create_admin)
+
+  app.route('/admin/:id')
+    .delete(admin.delete_admin)
 
 /* Error Handler */
   app.use(function (err, req, res, next) {

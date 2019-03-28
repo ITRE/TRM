@@ -6,29 +6,27 @@ const AdminSchema = new Schema({
   username: {
     type: String,
     unique: true,
-    Required: 'Please enter your Unity ID'
+    Required: 'Please enter your username'
   },
+  name: String,
+  email: String,
   password: {
     type: String,
     Required: 'Please enter a memorable password'
   },
   resetPasswordToken: String,
-  resetPasswordExpires: Date,
-  first: String,
-  last: String
+  resetPasswordExpires: Date
 })
 
 AdminSchema.pre('save', function(next)  {
   let user = this
   bcrypt.genSalt(10, function(err, salt) {
     if (err) {
-      error.name = 'PassHash'
-      return next(err)
+      return next({name: 'PassHash'})
     } else {
       bcrypt.hash(user.password, salt, function(error, hash) {
         if (error) {
-          error.name = 'PassHash'
-          return next(error)
+          return next({name: 'PassHash'})
         } else {
           user.password = hash
           next()
@@ -50,8 +48,7 @@ const hashPassword = function(next) {
     console.log('Password Hashed')
     next()
   } catch (error) {
-    error.name = 'PassHash'
-    return next(error)
+    return next({name: 'PassHash'})
   }
 }
 

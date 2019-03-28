@@ -14,6 +14,7 @@ const NoteSchema = new Schema({
 const TicketSchema = new Schema({
   user: String,
   staff: String,
+  emailID: String,
   added: {
     type: Date,
     default: Date.now
@@ -30,8 +31,9 @@ const TicketSchema = new Schema({
   },
   kind: {
 		type: String,
-		enum: [ 'Dowload', 'Error', 'Other']
+		enum: ['Download', 'Other']
 	},
+  subject: String,
   info: {type: Schema.Types.ObjectId, refPath: 'kind'},
   log: [NoteSchema]
 })
