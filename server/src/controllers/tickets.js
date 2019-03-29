@@ -149,7 +149,7 @@ exports.update_request = function(req, res, next) {
   validatedDoc = validateTicket(req.body.ticket)
   validatedLog = validateLog(req.body.log)
   Ticket.findOneAndUpdate({
-    "thread_id": validatedDoc.thread_id},
+    "_id": req.params.id},
     { $set: validatedDoc, $push: {log: validatedLog} },
     { upsert: true, new: true }
   )
@@ -164,6 +164,31 @@ exports.update_request = function(req, res, next) {
 
 exports.get_ticket = function(req, res, next) {
 	Ticket.find({"_id": req.params.id})
+  .populate('info')
+  .exec(function(err, doc) {
+    if (err) {
+			err.name = 'FindError'
+      return next(err)
+    }
+    return res.status(200).send({success: true, data: doc})
+  })
+}
+
+exports.list_tickets = function(req, res, next) {
+	Ticket.find({})
+  .populate('info')
+  .exec(function(err, docs) {
+    if (err) {
+			err.name = 'FindError'
+      return next(err)
+    }
+    return res.status(200).send({success: true, data: docs})
+  })
+}
+
+exports.list_admin_tickets = function(req, res, next) {
+	Ticket.find({"staff": req.params.id})
+  .populate('user')
   .populate('info')
   .exec(function(err, doc) {
     if (err) {

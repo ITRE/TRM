@@ -33,7 +33,7 @@ async function sendMail(email) {
     auth: authClient
   })
 
-  const subject = email.subject
+  const subject = 'Re: ' + email.subject
   const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`
   const messageParts = [
     `From: ${config.email}`,
@@ -60,29 +60,34 @@ async function sendMail(email) {
       'threadID': email.thread_id
     },
   })
+  console.log(res.data)
   return res.data
 }
 
 exports.send_response = function(req, res, next) {
   if (req.body === null || !req.body) {
     return next({name:'Missing'})
-	} else if(validator.isEmpty(req.body.ticket) || validator.isEmpty(req.body.ticket.user) || validator.isEmpty(req.body.ticket.subject) || validator.isEmpty(req.body.log.message)) {
+	} else if(validator.isEmpty(req.body.ticket.user) || validator.isEmpty(req.body.ticket.subject) || validator.isEmpty(req.body.log.note)) {
     return next({name:'Missing'})
 	} else if(!validator.isEmail(req.body.ticket.user)) {
     return next({name:'EmailError'})
   } else {
     authenticate()
-    .then(sendMail({
-      user: req.body.ticket.user,
-      subject: req.body.ticket.subject,
-      message: req.body.log.message,
-      thread_id: req.body.ticket.thread_id ? req.body.ticket.thread_id : ''
-    }))
-    .then((response)=>{
-      console.log('Message Sent!')
-      req.body.ticket.thread_id = response.threadId
-      req.body.log.message_id = response.id
-      next()
+    .then(client => {
+      sendMail({
+        user: req.body.ticket.user,
+        subject: req.body.ticket.subject,
+        message: req.body.log.note,
+        thread_id: req.body.ticket.thread_id ? req.body.ticket.thread_id : ''
+      }).then(response => {
+        console.log('sent!', response)
+        req.body.ticket.thread_id = response.threadId
+        req.body.log.message_id = response.id
+        next()
+      })
+      .catch(err => {
+        return next(err)
+      })
     })
     .catch(err => {
       return next(err)

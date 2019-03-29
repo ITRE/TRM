@@ -25,22 +25,24 @@ module.exports = function(app) {
 
   app.route('/tickets')
     .post(tickets.new_request)
+    .get(tickets.list_tickets)
 
   app.route('/tickets/:id')
+    .put(email.send_response, tickets.update_request)
 //    .put(tickets.update_request)
-//    .get(tickets.list_users)
+    .get(tickets.get_ticket)
 
   app.route('/admin')
     .post(admin.create_admin)
 
   app.route('/admin/:id')
     .delete(admin.delete_admin)
+    .get(tickets.list_admin_tickets)
 
   app.route('/messages')
-    .post(email.send_response)
+    .put(email.send_response, tickets.update_request)
 
   app.route('/testing')
-    .get(email.send_test)
     .post(function(req, res, next) {
       console.log(req.body)
       req.body = 'whooo!'
