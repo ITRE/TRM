@@ -7,7 +7,7 @@ const Other = mongoose.model('Other')
 const validateTicket = (input) => {
   if (input === null || !input) {
     return next({name:'Missing'})
-	} else if(validator.isEmpty(input.user) || validator.isEmpty(input.staff) || validator.isEmpty(input.subject) || validator.isEmpty(input.log.type) || validator.isEmpty(input.log.staff) || validator.isEmpty(input.log.note)) {
+	} else if(validator.isEmpty(input.user) || validator.isEmpty(input.staff) || validator.isEmpty(input.subject)) {
     return next({name:'Missing'})
 	} else if(!validator.isEmail(input.user)) {
     return next({name:'EmailError'})
@@ -19,15 +19,9 @@ const validateTicket = (input) => {
       priority: 'Normal',
       status: 'New',
       kind: '',
-      subject: '',
-      log: {
-        type: '',
-        date: '',
-        staff: '',
-        note: ''
-      }
+      info: '',
+      subject: ''
     }
-    console.log("Input: ", input)
 
     validatedDoc.user = validator.normalizeEmail(input.user)
 
@@ -35,29 +29,51 @@ const validateTicket = (input) => {
     validatedDoc.staff = validator.escape(validatedDoc.staff)
     validatedDoc.staff = validator.blacklist(validatedDoc.staff, '$')
 
-    validatedDoc.emailID = input.emailID ? input.emailID : ''
+    validatedDoc.thread_id = input.thread_id ? input.thread_id : ''
 
     validatedDoc.priority = validator.isIn(input.priority, ['Low', 'Normal', 'Medium', 'High', 'Urgent']) ? input.priority : 'Normal'
     validatedDoc.status = validator.isIn(input.status, ['New', 'Seen', 'In Progress', 'On Hold', 'Awaiting Reply', 'Completed', 'Closed', 'Reopened']) ? input.status : 'New'
     validatedDoc.kind = validator.isIn(input.kind, ['Download', 'Error', 'Other']) ? input.kind : 'Other'
 
+    validatedDoc.info = input.info ? input.info : ''
+
     validatedDoc.subject = validator.trim(input.subject)
     validatedDoc.subject = validator.escape(validatedDoc.subject)
     validatedDoc.subject = validator.blacklist(validatedDoc.subject, '$')
 
-    validatedDoc.log.type = validator.trim(input.log.type)
-    validatedDoc.log.type = validator.escape(validatedDoc.log.type)
-    validatedDoc.log.type = validator.blacklist(validatedDoc.log.type, '$')
+    return validatedDoc
+  }
+}
 
-    validatedDoc.log.date = input.log.date ? validator.toDate(input.log.date) : Date.now()
+const validateLog = (input) => {
+  if (input === null || !input) {
+    return next({name:'Missing'})
+  } else if(validator.isEmpty(input.type) || validator.isEmpty(input.staff) || validator.isEmpty(input.note)) {
+    return next({name:'Missing'})
+  } else {
+    let validatedDoc = {
+      type: '',
+      date: '',
+      message_id: '',
+      staff: '',
+      note: ''
+    }
 
-    validatedDoc.log.staff = validator.trim(input.log.staff)
-    validatedDoc.log.staff = validator.escape(validatedDoc.log.staff)
-    validatedDoc.log.staff = validator.blacklist(validatedDoc.log.staff, '$')
+    validatedDoc.type = validator.trim(input.type)
+    validatedDoc.type = validator.escape(validatedDoc.type)
+    validatedDoc.type = validator.blacklist(validatedDoc.type, '$')
 
-    validatedDoc.log.note = validator.trim(input.log.note)
-    validatedDoc.log.note = validator.escape(validatedDoc.log.note)
-    validatedDoc.log.note = validator.blacklist(validatedDoc.log.note, '$')
+    validatedDoc.date = input.date ? validator.toDate(input.date) : Date.now()
+
+    validatedDoc.message_id = input.message_id ? input.message_id : ''
+
+    validatedDoc.staff = validator.trim(input.staff)
+    validatedDoc.staff = validator.escape(validatedDoc.staff)
+    validatedDoc.staff = validator.blacklist(validatedDoc.staff, '$')
+
+    validatedDoc.note = validator.trim(input.note)
+    validatedDoc.note = validator.escape(validatedDoc.note)
+    validatedDoc.note = validator.blacklist(validatedDoc.note, '$')
 
     return validatedDoc
   }
@@ -65,8 +81,6 @@ const validateTicket = (input) => {
 
 const validateSubTicket = (kind, input) => {
   let validatedDoc = {}
-  console.log("Kind: ", kind)
-  console.log("Input: ", input)
 
   switch (kind) {
     case "Download":
@@ -100,7 +114,6 @@ const validateSubTicket = (kind, input) => {
 
 exports.new_request = function(req, res, next) {
 	let validatedDoc = validateSubTicket(req.body.ticket.kind, req.body.kind)
-  console.log("Validated Sub Ticket: ", validatedDoc)
   if (validatedDoc === 'Error') {
     validatedDoc.name = 'Missing'
     return next(validatedDoc)
@@ -129,5 +142,34 @@ exports.new_request = function(req, res, next) {
       }
       return res.status(201).send({success: true, data: [ticket, doc], req: req.body})
     })
+  })
+}
+
+exports.update_request = function(req, res, next) {
+  validatedDoc = validateTicket(req.body.ticket)
+  validatedLog = validateLog(req.body.log)
+  Ticket.findOneAndUpdate({
+    "thread_id": validatedDoc.thread_id},
+    { $set: validatedDoc, $push: {log: validatedLog} },
+    { upsert: true, new: true }
+  )
+  .exec(function(err, ticket) {
+    if (err) {
+			err.name = 'UpdateError'
+      return next(err)
+    }
+    return res.status(201).send({success: true, msg: "Ticket Successfully Updated.", data: ticket})
+  })
+}
+
+exports.get_ticket = function(req, res, next) {
+	Ticket.find({"_id": req.params.id})
+  .populate('info')
+  .exec(function(err, doc) {
+    if (err) {
+			err.name = 'FindError'
+      return next(err)
+    }
+    return res.status(200).send({success: true, data: doc})
   })
 }

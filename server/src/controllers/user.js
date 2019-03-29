@@ -111,6 +111,8 @@ exports.delete_user = function(req, res, next) {
   		}
       res.json({ message: 'All Users Successfully Deleted' })
     })
+  } else if(validator.isEmpty(req.params.id) || !validator.isEmail(req.params.id)) {
+    return next({name:'Missing'})
   } else {
     User.remove({
       "email": req.params.id

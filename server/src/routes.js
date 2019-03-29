@@ -7,6 +7,7 @@ module.exports = function(app) {
   const users = require('./controllers/user')
 	const tickets = require('./controllers/tickets')
 	const admin = require('./controllers/admin')
+	const email = require('./controllers/email')
 
   app.route('/')
 		.get(function(req, res) {
@@ -24,6 +25,9 @@ module.exports = function(app) {
 
   app.route('/tickets')
     .post(tickets.new_request)
+
+  app.route('/tickets/:id')
+//    .put(tickets.update_request)
 //    .get(tickets.list_users)
 
   app.route('/admin')
@@ -31,6 +35,20 @@ module.exports = function(app) {
 
   app.route('/admin/:id')
     .delete(admin.delete_admin)
+
+  app.route('/messages')
+    .post(email.send_response)
+
+  app.route('/testing')
+    .get(email.send_test)
+    .post(function(req, res, next) {
+      console.log(req.body)
+      req.body = 'whooo!'
+      next()
+    }, function(req, res, next) {
+      console.log(req.body)
+      res.send('booooy!')
+    })
 
 /* Error Handler */
   app.use(function (err, req, res, next) {

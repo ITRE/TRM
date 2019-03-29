@@ -66,7 +66,9 @@ exports.delete_admin = function(req, res, next) {
   		}
       res.json({ message: 'All Admins Successfully Deleted' })
     })
-  } else {
+  } else if(validator.isEmpty(req.params.id)) {
+    return next({name:'Missing'})
+  }  else {
     Admin.remove({
       "username": req.params.id
     }, function(err, admin) {

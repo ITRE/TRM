@@ -7,6 +7,7 @@ const NoteSchema = new Schema({
     type: Date,
     default: Date.now
   },
+  message_id: String,
   staff: String,
   note: String
 })
@@ -14,7 +15,7 @@ const NoteSchema = new Schema({
 const TicketSchema = new Schema({
   user: String,
   staff: String,
-  emailID: String,
+  thread_id: String,
   added: {
     type: Date,
     default: Date.now
