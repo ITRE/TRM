@@ -3,7 +3,7 @@ const Schema = mongoose.Schema
 
 const OtherSchema = new Schema({
   desc: String,
-  attachments: String
+  attachments: Boolean
 })
 
 module.exports = mongoose.model('Other', OtherSchema)

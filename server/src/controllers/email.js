@@ -64,6 +64,86 @@ async function sendMail(email) {
   return res.data
 }
 
+async function fetchMail() {
+  const gmail = google.gmail({
+    version: 'v1',
+    auth: authClient
+  })
+
+  const list = await gmail.users.messages.list({
+    'userId': 'me',
+    'q': 'is:unread'
+  })
+  console.log(list.data)
+  let response = []
+
+  for (let message of list.data.messages) {
+    let res = await fetchResponse(message.id)
+    response.push(res)
+  }
+  return response
+}
+
+async function fetchResponse(id) {
+  const gmail = google.gmail({
+    version: 'v1',
+    auth: authClient
+  })
+
+  const response = await gmail.users.messages.get({
+    'userId': 'me',
+    'id': id
+  })
+  let ticket = {
+    user: '',
+    staff: '',
+    thread_id: response.data.threadId,
+    priority: 'Normal',
+    status: 'New',
+    kind: 'Other',
+    subject: ''
+  }
+  let kind = {
+    desc: ``,
+    attachments: false
+  }
+
+  for (let head of response.data.payload.headers) {
+    switch (head.name) {
+      case 'From':
+        ticket.user = head.value
+      case 'Subject':
+        ticket.subject = head.value
+      default:
+        continue;
+    }
+  }
+
+  for (let part of response.data.payload.parts) {
+    if (part.filename && part.filename.length > 0) {
+      kind.attachments = true
+    } else if (!part.body.data) {
+      continue
+    } else {
+      kind.desc += Base64.decode(part.body.data)
+    }
+  }
+
+  return {ticket, kind}
+
+}
+
+exports.fetch_responses = function(req, res, next) {
+  authenticate()
+  .then(fetchMail)
+  .then(response => {
+    return res.status(201).send({success: true, msg: "Fetched.", data: response})
+  })
+  .catch(err => {
+    return next(err)
+  })
+}
+
 exports.send_response = function(req, res, next) {
   if (req.body === null || !req.body) {
     return next({name:'Missing'})

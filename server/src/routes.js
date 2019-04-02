@@ -41,6 +41,7 @@ module.exports = function(app) {
 
   app.route('/messages')
     .put(email.send_response, tickets.update_request)
+    .get(email.fetch_responses)
 
   app.route('/testing')
     .post(function(req, res, next) {
