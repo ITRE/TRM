@@ -146,8 +146,8 @@ exports.new_request = function(req, res, next) {
 }
 
 exports.update_request = function(req, res, next) {
-  validatedDoc = validateTicket(req.body.ticket)
-  validatedLog = validateLog(req.body.log)
+  let validatedDoc = validateTicket(req.body.ticket)
+  let validatedLog = validateLog(req.body.log)
   Ticket.findOneAndUpdate({
     "_id": req.params.id},
     { $set: validatedDoc, $push: {log: validatedLog} },

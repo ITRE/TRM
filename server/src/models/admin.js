@@ -22,11 +22,11 @@ AdminSchema.pre('save', function(next)  {
   let user = this
   bcrypt.genSalt(10, function(err, salt) {
     if (err) {
-      return next({name: 'PassHash'})
+      return next({name: 'PassHash', err: err})
     } else {
       bcrypt.hash(user.password, salt, function(error, hash) {
         if (error) {
-          return next({name: 'PassHash'})
+          return next({name: 'PassHash', err: error})
         } else {
           user.password = hash
           next()

@@ -34,10 +34,17 @@ module.exports = function(app) {
 
   app.route('/admin')
     .post(admin.create_admin)
+    .get(admin.list_admins)
 
   app.route('/admin/:id')
     .delete(admin.delete_admin)
+    .put(admin.update_admin)
     .get(tickets.list_admin_tickets)
+
+  app.route('/login')
+    .post(admin.login_admin)
+    .get(email.send_reset)
+    .put(admin.login_reset)
 
   app.route('/messages')
     .put(email.send_response, tickets.update_request)
