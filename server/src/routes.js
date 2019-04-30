@@ -31,6 +31,7 @@ module.exports = function(app) {
     .put(email.send_response, tickets.update_request)
 //    .put(tickets.update_request)
     .get(tickets.get_ticket)
+    .delete(tickets.delete_tickets)
 
   app.route('/admin')
     .post(admin.create_admin)
@@ -48,7 +49,8 @@ module.exports = function(app) {
 
   app.route('/messages')
     .put(email.send_response, tickets.update_request)
-    .get(email.fetch_responses)
+    .post(email.request_download, tickets.new_request)
+    .get(email.fetch_responses, tickets.check_thread, tickets.update_tickets, tickets.new_tickets, tickets.list_tickets)
 
   app.route('/testing')
     .post(function(req, res, next) {

@@ -9,7 +9,11 @@ const AdminSchema = new Schema({
     Required: 'Please enter your username'
   },
   name: String,
-  email: String,
+  email: {
+    type: String,
+    unique: true,
+    Required: 'Please enter your email address'
+  },
   password: {
     type: String,
     Required: 'Please enter a memorable password'

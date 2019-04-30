@@ -15,7 +15,10 @@ const NoteSchema = new Schema({
 const TicketSchema = new Schema({
   user: String,
   staff: String,
-  thread_id: String,
+  thread_id: {
+    type: String,
+    unique: true
+  },
   added: {
     type: Date,
     default: Date.now

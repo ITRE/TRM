@@ -82,7 +82,7 @@ exports.update_admin = function(req, res, next) {
 
 exports.delete_admin = function(req, res, next) {
   if (req.params.id === 'all') {
-    Admin.remove({}, function(err, admin) {
+    Admin.deleteMany({}, function(err, admin) {
       if (err) {
   			return next(err)
   		}
@@ -91,7 +91,7 @@ exports.delete_admin = function(req, res, next) {
   } else if(validator.isEmpty(req.params.id)) {
     return next({name:'Missing'})
   }  else {
-    Admin.remove({
+    Admin.deleteOne({
       "username": req.params.id
     }, function(err, admin) {
       if (err) {

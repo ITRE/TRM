@@ -42,8 +42,8 @@ async function sendMail(email) {
   const subject = 'Re: ' + email.subject
   const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`
   const messageParts = [
-    `From: ${config.email}`,
-    `To: ${email.user}`,
+    `From: ${email.from}`,
+    `To: ${email.to}`,
     `Content-Type: text/html; charset=utf-8`,
     `MIME-Version: 1.0`,
     `Subject: ${utf8Subject}`,
@@ -81,7 +81,6 @@ async function fetchMail() {
     'userId': 'me',
     'q': 'is:unread'
   })
-  console.log(list.data)
   let response = []
 
   for (let message of list.data.messages) {
@@ -110,8 +109,12 @@ async function fetchResponse(id) {
     kind: 'Other',
     subject: ''
   }
-  let kind = {
-    desc: ``,
+  let log = {
+    note: ``,
+    date: '',
+    type: 'Response',
+    staff: 'N/A',
+    message_id: response.data.id,
     attachments: false
   }
 
@@ -121,6 +124,8 @@ async function fetchResponse(id) {
         ticket.user = head.value
       case 'Subject':
         ticket.subject = head.value
+      case 'Date':
+        log.date = head.value
       default:
         continue;
     }
@@ -128,15 +133,15 @@ async function fetchResponse(id) {
 
   for (let part of response.data.payload.parts) {
     if (part.filename && part.filename.length > 0) {
-      kind.attachments = true
+      log.attachments = true
     } else if (!part.body.data) {
       continue
     } else {
-      kind.desc += Base64.decode(part.body.data)
+      log.desc += Base64.decode(part.body.data)
     }
   }
 
-  return {ticket, kind}
+  return {ticket, log}
 }
 
 /*
@@ -148,7 +153,9 @@ exports.fetch_responses = function(req, res, next) {
   authenticate()
   .then(fetchMail)
   .then(response => {
-    return res.status(201).send({success: true, msg: "Fetched.", data: response})
+    req.body.responses = response
+    console.log('fetched')
+    return next()
   })
   .catch(err => {
     return next(err)
@@ -203,7 +210,8 @@ exports.send_reset = function(req, res, next) {
       authenticate()
       .then(client => {
         sendMail({
-          user: req.body.user,
+          to: req.body.user,
+          from: config.email,
           subject: 'Password Reset',
           message: `You are recieving this email because you requested a reset of your password.
             <br />
@@ -224,4 +232,42 @@ exports.send_reset = function(req, res, next) {
       })
     }
   })
+}
+
+// Send Password Reset
+exports.request_download = function(req, res, next) {
+  if (req.body === null || !req.body) {
+    return next({name:'Missing'})
+  } else if(!validator.isEmail(req.body.kind.email)) {
+    return next({name:'EmailError'})
+  } else {
+    authenticate()
+    .then(client => {
+      sendMail({
+        to: config.email,
+        from: req.body.kind.email,
+        subject: 'Request for TRM',
+        message: `This is an automated request from the website for access to TRM.
+          <br />
+          Name: ${req.body.kind.name}
+          <br />
+          Organization: ${req.body.kind.organization}
+          <br />
+          Title: ${req.body.kind.title}
+          <br />
+          Use: ${req.body.kind.use}
+          <br />`
+      }).then(response => {
+        req.body.response = response
+        req.body.ticket.thread_id = response.threadId;
+        return next()
+      })
+      .catch(err => {
+        return next(err)
+      })
+    })
+    .catch(err => {
+      return next(err)
+    })
+  }
 }
